@@ -1,0 +1,12 @@
+# IDE
+.idea/
+*.iml
+.smarttomcat/
+
+# Build output
+target/
+out/
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,234 @@
+<%-- /WEB-INF/views/common/sidebar.jspf
+     Usage: <%@ include file="/WEB-INF/views/common/sidebar.jspf" %>
+     Set ${activeNav} before including, e.g. request.setAttribute("activeNav","bills");
+--%>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   POLYCOFFEE DESIGN SYSTEM — shared across all pages
+   ═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream:    #FAF6F0; --espresso: #2C1810; --latte:    #C8956C;
+  --foam:     #F5EDE0; --roast:    #7B4A2D; --mocha:    #4A2C1A;
+  --steam:    #E8DDD0; --leaf:     #3D7A5C; --gold:     #C9943A;
+  --warm-red: #C04B3E; --blue:     #185FA5; --purple:   #534AB7;
+}
+body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--espresso); margin:0; }
+
+/* ── Sidebar ── */
+.pc-sidebar {
+  position:fixed; left:0; top:0; bottom:0; width:220px;
+  background:var(--espresso); display:flex; flex-direction:column; z-index:200;
+}
+.pc-logo { padding:26px 24px 18px; border-bottom:1px solid rgba(255,255,255,.08); }
+.pc-cup {
+  width:34px; height:34px; background:var(--latte); border-radius:50% 50% 45% 45%;
+  display:flex; align-items:center; justify-content:center; margin-bottom:10px; position:relative;
+}
+.pc-cup::after {
+  content:''; position:absolute; top:-5px; right:-4px;
+  width:9px; height:9px; border:2px solid var(--latte);
+  border-radius:0 50% 50% 0; border-left:none;
+}
+.pc-logo-title { font-family:'Playfair Display',serif; font-size:17px; color:var(--foam); letter-spacing:.4px; }
+.pc-logo-sub   { font-size:10px; color:rgba(255,255,255,.35); letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
+.pc-role {
+  margin:12px 24px; display:inline-flex; align-items:center; gap:6px;
+  background:rgba(200,149,108,.15); border:1px solid rgba(200,149,108,.22);
+  color:var(--latte); font-size:11px; padding:4px 10px; border-radius:20px;
+}
+.pc-role-dot { width:6px; height:6px; background:var(--latte); border-radius:50%; animation:pcpulse 2s infinite; }
+@keyframes pcpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+.pc-nav { flex:1; padding:6px 0; overflow-y:auto; }
+.pc-nav-section { padding:13px 24px 4px; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.22); }
+.pc-nav a {
+  display:flex; align-items:center; gap:10px; padding:9px 24px;
+  color:rgba(255,255,255,.52); font-size:13.5px; text-decoration:none;
+  border-left:2px solid transparent; transition:all .14s;
+}
+.pc-nav a:hover  { color:rgba(255,255,255,.88); background:rgba(255,255,255,.04); border-left-color:rgba(200,149,108,.35); }
+.pc-nav a.active { color:var(--foam); background:rgba(200,149,108,.12); border-left-color:var(--latte); font-weight:500; }
+.pc-nav-icon { width:15px; height:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pc-badge {
+  margin-left:auto; background:var(--warm-red); color:#fff;
+  font-size:10px; padding:1px 6px; border-radius:10px; min-width:18px; text-align:center;
+}
+.pc-footer { padding:14px 24px; border-top:1px solid rgba(255,255,255,.08); }
+.pc-user { display:flex; align-items:center; gap:10px; }
+.pc-avatar {
+  width:30px; height:30px; border-radius:50%;
+  background:linear-gradient(135deg,var(--latte),var(--roast));
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:500; color:#fff; flex-shrink:0;
+}
+.pc-uname { font-size:13px; font-weight:500; color:var(--foam); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0; }
+.pc-urole { font-size:10px; color:rgba(255,255,255,.32); }
+.pc-logout { background:none; border:none; cursor:pointer; color:rgba(255,255,255,.28); padding:3px; transition:color .14s; display:flex; text-decoration:none; }
+.pc-logout:hover { color:var(--warm-red); }
+
+/* ── Main shell ── */
+.pc-main { margin-left:220px; padding:30px 34px; min-height:100vh; }
+.pc-topbar { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:26px; }
+.pc-page-title { font-family:'Playfair Display',serif; font-size:23px; font-weight:500; }
+.pc-page-sub   { font-size:13px; color:rgba(44,24,16,.42); margin-top:2px; }
+.pc-back { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--latte); text-decoration:none; transition:color .14s; }
+.pc-back:hover { color:var(--roast); }
+
+/* ── Cards ── */
+.pc-card { background:#fff; border:1px solid var(--steam); border-radius:14px; overflow:hidden; }
+.pc-card-hd { padding:16px 20px 14px; border-bottom:1px solid var(--steam); display:flex; align-items:center; justify-content:space-between; }
+.pc-card-title { font-family:'Playfair Display',serif; font-size:15px; font-weight:500; }
+.pc-card-bd { padding:20px; }
+
+/* ── Alerts ── */
+.pc-alert { border-radius:10px; padding:10px 16px; font-size:13px; margin-bottom:18px; border:1px solid; }
+.pc-alert.success { background:rgba(61,122,92,.08); border-color:rgba(61,122,92,.22); color:var(--leaf); }
+.pc-alert.danger  { background:rgba(192,75,62,.08); border-color:rgba(192,75,62,.22); color:var(--warm-red); }
+.pc-alert.warning { background:rgba(201,148,58,.08); border-color:rgba(201,148,58,.22); color:var(--gold); }
+
+/* ── Tables ── */
+.pc-table { width:100%; border-collapse:collapse; font-size:13px; }
+.pc-table th { background:var(--espresso); color:var(--foam); padding:10px 14px; text-align:left; font-weight:500; font-size:11px; letter-spacing:.5px; text-transform:uppercase; }
+.pc-table th:first-child { border-radius:8px 0 0 0; }
+.pc-table th:last-child  { border-radius:0 8px 0 0; }
+.pc-table td { padding:11px 14px; border-bottom:1px solid var(--steam); vertical-align:middle; }
+.pc-table tr:last-child td { border-bottom:none; }
+.pc-table tr:hover td { background:var(--foam); }
+.pc-table tfoot td { background:var(--foam); font-weight:500; border-top:2px solid var(--steam); }
+
+/* ── Status pills ── */
+.pc-pill { font-size:11px; font-weight:500; padding:3px 10px; border-radius:20px; display:inline-block; }
+.pc-pill.finish  { background:rgba(61,122,92,.1);  color:var(--leaf); }
+.pc-pill.waiting { background:rgba(201,148,58,.1); color:var(--gold); }
+.pc-pill.cancel  { background:rgba(192,75,62,.1);  color:var(--warm-red); }
+.pc-pill.active  { background:rgba(61,122,92,.1);  color:var(--leaf); }
+.pc-pill.locked  { background:rgba(192,75,62,.1);  color:var(--warm-red); }
+.pc-pill.on      { background:rgba(61,122,92,.1);  color:var(--leaf); }
+.pc-pill.off     { background:rgba(88,88,88,.1);   color:#666; }
+
+/* ── Buttons ── */
+.pc-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:7px 16px; border-radius:8px; font-size:13px; font-weight:500;
+  border:1px solid; cursor:pointer; text-decoration:none; transition:all .14s;
+  font-family:'DM Sans',sans-serif; line-height:1;
+}
+.pc-btn.primary  { background:var(--espresso); color:var(--foam); border-color:var(--espresso); }
+.pc-btn.primary:hover  { background:var(--mocha); border-color:var(--mocha); color:var(--foam); }
+.pc-btn.latte    { background:var(--latte); color:#fff; border-color:var(--latte); }
+.pc-btn.latte:hover    { background:#d4a07a; border-color:#d4a07a; color:#fff; }
+.pc-btn.ghost    { background:transparent; color:var(--espresso); border-color:var(--steam); }
+.pc-btn.ghost:hover    { background:var(--foam); border-color:var(--steam); color:var(--espresso); }
+.pc-btn.danger   { background:transparent; color:var(--warm-red); border-color:rgba(192,75,62,.3); }
+.pc-btn.danger:hover   { background:rgba(192,75,62,.07); color:var(--warm-red); }
+.pc-btn.sm { padding:5px 11px; font-size:12px; }
+
+/* ── Forms ── */
+.pc-form-group { margin-bottom:18px; }
+.pc-label { display:block; font-size:12px; font-weight:500; color:rgba(44,24,16,.6); margin-bottom:6px; letter-spacing:.3px; }
+.pc-input, .pc-select, .pc-textarea {
+  width:100%; padding:9px 13px; border:1px solid var(--steam); border-radius:9px;
+  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--espresso);
+  background:#fff; transition:border-color .14s, box-shadow .14s; outline:none;
+}
+.pc-input:focus, .pc-select:focus, .pc-textarea:focus {
+  border-color:var(--latte); box-shadow:0 0 0 3px rgba(200,149,108,.12);
+}
+.pc-input.is-invalid, .pc-select.is-invalid { border-color:var(--warm-red); }
+.pc-invalid-msg { font-size:12px; color:var(--warm-red); margin-top:4px; }
+.pc-check { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; }
+.pc-check input { width:16px; height:16px; accent-color:var(--latte); cursor:pointer; }
+
+/* ── Pagination ── */
+.pc-pagination { display:flex; gap:4px; margin-top:16px; }
+.pc-page-btn {
+  width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--steam); border-radius:8px; font-size:13px; text-decoration:none;
+  color:var(--espresso); transition:all .14s;
+}
+.pc-page-btn:hover  { background:var(--foam); border-color:var(--latte); color:var(--espresso); }
+.pc-page-btn.active { background:var(--espresso); color:var(--foam); border-color:var(--espresso); }
+
+/* ── Search bar ── */
+.pc-search-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:20px; }
+.pc-search-row .pc-input, .pc-search-row .pc-select { max-width:200px; }
+
+/* ── Section divider ── */
+.pc-divider { font-size:11px; color:rgba(44,24,16,.35); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+.pc-divider::after { content:''; flex:1; height:1px; background:var(--steam); }
+</style>
+
+<div class="pc-sidebar">
+  <div class="pc-logo">
+    <div class="pc-cup">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+        <path d="M3 6h12l-1.5 8H4.5L3 6z" fill="rgba(255,255,255,0.9)"/>
+        <path d="M6 6V4a2 2 0 014 0v2" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" fill="none"/>
+      </svg>
+    </div>
+    <div class="pc-logo-title">PolyCoffee</div>
+    <div class="pc-logo-sub">Management System</div>
+  </div>
+
+  <div class="pc-role">
+    <div class="pc-role-dot"></div>
+    <c:choose>
+      <c:when test="${sessionScope.user.role}">Quản lý</c:when>
+      <c:otherwise>Nhân viên</c:otherwise>
+    </c:choose>
+  </div>
+
+  <nav class="pc-nav">
+    <div class="pc-nav-section">Tổng quan</div>
+    <a href="${pageContext.request.contextPath}/manager/dashboard" class="${activeNav eq 'dashboard' ? 'active' : ''}">
+      <span class="pc-nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1L1 6v7h4V9h4v4h4V6L7 1z"/></svg></span>Dashboard
+    </a>
+
+    <c:if test="${sessionScope.user.role}">
+      <div class="pc-nav-section">Quản lý</div>
+      <a href="${pageContext.request.contextPath}/manager/categories" class="${activeNav eq 'categories' ? 'active' : ''}">
+        <span class="pc-nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 4h10M3 7h7M5 10h4"/></svg></span>Danh mục
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/drinks" class="${activeNav eq 'drinks' ? 'active' : ''}">
+        <span class="pc-nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 4h8L9.5 11H4.5L3 4z"/><path d="M5 4V3a2 2 0 014 0v1"/></svg></span>Đồ uống
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/staffs" class="${activeNav eq 'staffs' ? 'active' : ''}">
+        <span class="pc-nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="5" r="2.5"/><path d="M2.5 12c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4"/></svg></span>Nhân viên
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/bills" class="${activeNav eq 'bills' ? 'active' : ''}">
+        <span class="pc-nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2.5" width="11" height="9" rx="1"/><path d="M4.5 2.5V1.5M9.5 2.5V1.5M1.5 6h11"/></svg></span>Hóa đơn
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/statistics" class="${activeNav eq 'statistics' ? 'active' : ''}">
+        <span class="pc-nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 10l3-4 3 3 3-5 2 2"/><path d="M2 2v8h10"/></svg></span>Thống kê
+      </a>
+    </c:if>
+
+    <div class="pc-nav-section">Nhân viên</div>
+    <a href="${pageContext.request.contextPath}/employee/pos" class="${activeNav eq 'pos' ? 'active' : ''}">
+      <span class="pc-nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="2" width="12" height="8" rx="1"/><path d="M4.5 10v2M9.5 10v2M2.5 12h9"/><path d="M5.5 5.5h3M7 4.5v3"/></svg></span>POS
+    </a>
+  </nav>
+
+  <div class="pc-footer">
+    <div class="pc-user">
+      <div class="pc-avatar">
+        <c:set var="fn" value="${sessionScope.user.fullName}"/>
+        <c:choose>
+          <c:when test="${not empty fn}">${fn.substring(0,1).toUpperCase()}</c:when>
+          <c:otherwise>U</c:otherwise>
+        </c:choose>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="pc-uname">${sessionScope.user.fullName}</div>
+        <div class="pc-urole">${sessionScope.user.email}</div>
+      </div>
+      <a href="${pageContext.request.contextPath}/auth/logout" class="pc-logout" title="Đăng xuất">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M9 7H3M3 7L5 5M3 7L5 9"/><path d="M7.5 4V3a1 1 0 011-1h3a1 1 0 011 1v8a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
