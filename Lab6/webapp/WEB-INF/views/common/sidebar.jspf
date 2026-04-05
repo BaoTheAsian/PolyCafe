@@ -1,9 +1,8 @@
+<%@ page pageEncoding="UTF-8" %>
 <%-- /WEB-INF/views/common/sidebar.jspf
      Usage: <%@ include file="/WEB-INF/views/common/sidebar.jspf" %>
      Set ${activeNav} before including, e.g. request.setAttribute("activeNav","bills");
 --%>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════
    POLYCOFFEE DESIGN SYSTEM — shared across all pages
@@ -175,7 +174,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--es
   <div class="pc-role">
     <div class="pc-role-dot"></div>
     <c:choose>
-      <c:when test="${sessionScope.user.role}">Quản lý</c:when>
+      <c:when test="${sessionScope.user.role eq 'manager' or sessionScope.user.role eq 'true' or sessionScope.user.role eq '1'}">Quản lý</c:when>
       <c:otherwise>Nhân viên</c:otherwise>
     </c:choose>
   </div>
@@ -186,7 +185,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--es
       <span class="pc-nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1L1 6v7h4V9h4v4h4V6L7 1z"/></svg></span>Dashboard
     </a>
 
-    <c:if test="${sessionScope.user.role}">
+    <c:if test="${sessionScope.user.role eq 'manager' or sessionScope.user.role eq 'true' or sessionScope.user.role eq '1'}">
       <div class="pc-nav-section">Quản lý</div>
       <a href="${pageContext.request.contextPath}/manager/categories" class="${activeNav eq 'categories' ? 'active' : ''}">
         <span class="pc-nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 4h10M3 7h7M5 10h4"/></svg></span>Danh mục

@@ -22,6 +22,7 @@
     <h4>${drink.id > 0 ? 'Sửa' : 'Thêm'} đồ uống</h4>
 
     <form method="post" action="${pageContext.request.contextPath}/manager/drinks" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf" value="${sessionScope._csrf}">
         <input type="hidden" name="action" value="${drink.id > 0 ? 'update' : 'create'}">
         <c:if test="${drink.id > 0}">
             <input type="hidden" name="id" value="${drink.id}">

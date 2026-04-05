@@ -7,13 +7,11 @@ import javax.servlet.http.HttpSession;
 public class AuthUtil {
 
     public static void setUser(HttpServletRequest request, User user) {
-        HttpSession session = request.getSession();
-        session.setAttribute("user", user);
+        request.getSession().setAttribute("user", user);
     }
 
     public static User getUser(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        return (User) session.getAttribute("user");
+        return (User) request.getSession().getAttribute("user");
     }
 
     public static boolean isAuthenticated(HttpServletRequest request) {
@@ -22,11 +20,10 @@ public class AuthUtil {
 
     public static boolean isManager(HttpServletRequest request) {
         User user = getUser(request);
-        return user != null && user.isRole();
+        return user != null && user.isManager();
     }
 
     public static void clear(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        session.invalidate();
+        request.getSession().invalidate();
     }
 }

@@ -4,6 +4,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <title>${staff.id > 0 ? 'Sửa' : 'Thêm'} nhân viên — PolyCoffee</title>
   <c:set var="activeNav" value="staffs" scope="request"/>
 </head>
@@ -13,10 +15,14 @@
   <div class="pc-topbar">
     <div>
       <a href="${pageContext.request.contextPath}/manager/staffs" class="pc-back">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11L5 7l4-4"/></svg>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 11L5 7l4-4"/>
+        </svg>
         Quay lại nhân viên
       </a>
-      <div class="pc-page-title" style="margin-top:8px;">${staff.id > 0 ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}</div>
+      <div class="pc-page-title" style="margin-top:8px;">
+        ${staff.id > 0 ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
+      </div>
     </div>
   </div>
 
@@ -26,21 +32,24 @@
     </div>
     <div class="pc-card-bd">
       <form method="post" action="${pageContext.request.contextPath}/manager/staffs">
-        <input type="hidden" name="action" value="${staff.id > 0 ? 'update' : 'create'}">
+        <input type="hidden" name="_csrf"   value="${sessionScope._csrf}">
+        <input type="hidden" name="action"  value="${staff.id > 0 ? 'update' : 'create'}">
         <c:if test="${staff.id > 0}">
           <input type="hidden" name="id" value="${staff.id}">
         </c:if>
 
         <div class="pc-form-group">
           <label class="pc-label">Họ và tên</label>
-          <input type="text" name="fullName" class="pc-input ${not empty errors.fullName ? 'is-invalid' : ''}"
+          <input type="text" name="fullName"
+                 class="pc-input ${not empty errors.fullName ? 'is-invalid' : ''}"
                  value="${staff.fullName}" placeholder="Nguyễn Văn A">
           <c:if test="${not empty errors.fullName}"><div class="pc-invalid-msg">${errors.fullName}</div></c:if>
         </div>
 
         <div class="pc-form-group">
           <label class="pc-label">Email</label>
-          <input type="email" name="email" class="pc-input ${not empty errors.email ? 'is-invalid' : ''}"
+          <input type="email" name="email"
+                 class="pc-input ${not empty errors.email ? 'is-invalid' : ''}"
                  value="${staff.email}" placeholder="staff@polycoffee.com">
           <c:if test="${not empty errors.email}"><div class="pc-invalid-msg">${errors.email}</div></c:if>
         </div>
@@ -48,9 +57,13 @@
         <div class="pc-form-group">
           <label class="pc-label">
             Mật khẩu
-            <c:if test="${staff.id > 0}"><span style="font-weight:400;color:rgba(44,24,16,.4);"> — để trống nếu không đổi</span></c:if>
+            <c:if test="${staff.id > 0}">
+              <span style="font-weight:400;color:rgba(44,24,16,.4);"> — để trống nếu không đổi</span>
+            </c:if>
           </label>
-          <input type="password" name="password" class="pc-input ${not empty errors.password ? 'is-invalid' : ''}" placeholder="••••••">
+          <input type="password" name="password"
+                 class="pc-input ${not empty errors.password ? 'is-invalid' : ''}"
+                 placeholder="••••••">
           <c:if test="${not empty errors.password}"><div class="pc-invalid-msg">${errors.password}</div></c:if>
         </div>
 
@@ -60,8 +73,18 @@
         </div>
 
         <div class="pc-form-group">
+          <label class="pc-label">Vai trò</label>
+          <select name="role" class="pc-select">
+            <option value="staff"   ${'staff'   eq staff.role ? 'selected' : ''}>Nhân viên chung</option>
+            <option value="cashier" ${'cashier' eq staff.role ? 'selected' : ''}>Thu ngân</option>
+            <option value="barista" ${'barista' eq staff.role ? 'selected' : ''}>Pha chế</option>
+          </select>
+        </div>
+
+        <div class="pc-form-group">
           <label class="pc-check">
-            <input type="checkbox" name="active" value="true" ${staff.active || empty staff ? 'checked' : ''}>
+            <input type="checkbox" name="active" value="true"
+                   ${staff.active || empty staff ? 'checked' : ''}>
             Tài khoản đang hoạt động
           </label>
         </div>

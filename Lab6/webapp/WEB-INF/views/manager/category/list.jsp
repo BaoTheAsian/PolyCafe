@@ -4,9 +4,10 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <title>Danh mục — PolyCoffee</title>
   <c:set var="activeNav" value="categories" scope="request"/>
-  <%@ include file="/WEB-INF/views/common/sidebar.jspf" %>
 </head>
 <body>
 <%@ include file="/WEB-INF/views/common/sidebar.jspf" %>

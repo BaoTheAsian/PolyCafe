@@ -9,11 +9,13 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Bill {
-    private int id;
-    private int userId;
-    private int cardId;
+    private int    id;
+    private int    userId;
+    private int    cardId;
+    private int    tableId;         // FK → cafe_tables.id  (0 = no table / takeaway)
     private String code;
-    private Date createdAt;
+    private Date   createdAt;
     private double total;
-    private String status;
+    private String status;          // waiting | finish | cancel
+    private String paymentMethod;   // cash | card | momo | zalopay
 }

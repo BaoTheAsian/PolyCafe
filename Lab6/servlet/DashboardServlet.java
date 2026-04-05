@@ -4,7 +4,6 @@ import dao.BillDAO;
 import dao.UserDAO;
 import entity.Bill;
 import entity.User;
-import utils.AuthUtil;
 import utils.JdbcUtil;
 
 import javax.servlet.ServletException;
@@ -15,7 +14,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet(urlPatterns = "/manager/dashboard")
 public class DashboardServlet extends HttpServlet {
@@ -34,120 +35,99 @@ public class DashboardServlet extends HttpServlet {
             throws ServletException, IOException {
 
         // ── 1. Today's revenue & bill count ──────────────────────────────
-        double todayRevenue = 0;
-        int todayBillCount = 0;
+        double todayRevenue   = 0;
+        int    todayBillCount = 0;
+        JdbcUtil.ResultSetHolder h1 = JdbcUtil.executeQuery(
+                "SELECT COUNT(*) AS bill_count, ISNULL(SUM(total),0) AS revenue " +
+                "FROM bills WHERE CAST(created_at AS DATE)=CAST(GETDATE() AS DATE) AND status<>'cancel'");
         try {
-            ResultSet rs = JdbcUtil.executeQuery(
-                    "SELECT COUNT(*) AS bill_count, ISNULL(SUM(total), 0) AS revenue " +
-                            "FROM bills " +
-                            "WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE) " +
-                            "  AND status <> 'cancel'"
-            );
-            if (rs != null && rs.next()) {
-                todayBillCount = rs.getInt("bill_count");
-                todayRevenue   = rs.getDouble("revenue");
+            if (h1 != null && h1.rs().next()) {
+                todayBillCount = h1.rs().getInt("bill_count");
+                todayRevenue   = h1.rs().getDouble("revenue");
             }
         } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h1); }
 
-        // ── 2. Yesterday's revenue (for % change display) ────────────────
-        double yesterdayRevenue = 0;
-        int yesterdayBillCount = 0;
+        // ── 2. Yesterday's revenue ────────────────────────────────────────
+        double yesterdayRevenue   = 0;
+        int    yesterdayBillCount = 0;
+        JdbcUtil.ResultSetHolder h2 = JdbcUtil.executeQuery(
+                "SELECT COUNT(*) AS bill_count, ISNULL(SUM(total),0) AS revenue " +
+                "FROM bills WHERE CAST(created_at AS DATE)=CAST(DATEADD(DAY,-1,GETDATE()) AS DATE) AND status<>'cancel'");
         try {
-            ResultSet rs = JdbcUtil.executeQuery(
-                    "SELECT COUNT(*) AS bill_count, ISNULL(SUM(total), 0) AS revenue " +
-                            "FROM bills " +
-                            "WHERE CAST(created_at AS DATE) = CAST(DATEADD(DAY,-1,GETDATE()) AS DATE) " +
-                            "  AND status <> 'cancel'"
-            );
-            if (rs != null && rs.next()) {
-                yesterdayBillCount = rs.getInt("bill_count");
-                yesterdayRevenue   = rs.getDouble("revenue");
+            if (h2 != null && h2.rs().next()) {
+                yesterdayBillCount = h2.rs().getInt("bill_count");
+                yesterdayRevenue   = h2.rs().getDouble("revenue");
             }
         } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h2); }
 
-        // ── 3. Pending bills count ────────────────────────────────────────
+        // ── 3. Pending bills ──────────────────────────────────────────────
         int pendingCount = 0;
+        JdbcUtil.ResultSetHolder h3 = JdbcUtil.executeQuery(
+                "SELECT COUNT(*) FROM bills WHERE status='waiting'");
         try {
-            ResultSet rs = JdbcUtil.executeQuery(
-                    "SELECT COUNT(*) FROM bills WHERE status = 'waiting'"
-            );
-            if (rs != null && rs.next()) pendingCount = rs.getInt(1);
+            if (h3 != null && h3.rs().next()) pendingCount = h3.rs().getInt(1);
         } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h3); }
 
-        // ── 4. Active staff count ─────────────────────────────────────────
-        int activeStaff = 0;
-        int totalStaff  = 0;
+        // ── 4. Staff counts ───────────────────────────────────────────────
+        int activeStaff = 0, totalStaff = 0;
+        JdbcUtil.ResultSetHolder h4 = JdbcUtil.executeQuery(
+                "SELECT SUM(CASE WHEN active=1 THEN 1 ELSE 0 END) AS active_count, " +
+                "COUNT(*) AS total_count FROM users WHERE role != 'manager'");
         try {
-            ResultSet rs = JdbcUtil.executeQuery(
-                    "SELECT " +
-                            "  SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) AS active_count, " +
-                            "  COUNT(*) AS total_count " +
-                            "FROM users WHERE role = 0"
-            );
-            if (rs != null && rs.next()) {
-                activeStaff = rs.getInt("active_count");
-                totalStaff  = rs.getInt("total_count");
+            if (h4 != null && h4.rs().next()) {
+                activeStaff = h4.rs().getInt("active_count");
+                totalStaff  = h4.rs().getInt("total_count");
             }
         } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h4); }
 
-        // ── 5. Last 5 bills for the recent-orders panel ───────────────────
+        // ── 5. Recent bills with staff names ──────────────────────────────
         List<Bill> recentBills = billDAO.findAllPaged(1, 5);
-
-        // Attach staff name to each bill by joining via userId
-        // We pass userDAO so the JSP can call it — simpler: build a map here
-        java.util.Map<Integer, String> staffNames = new java.util.HashMap<>();
+        Map<Integer, String> staffNames = new HashMap<>();
         for (Bill b : recentBills) {
-            if (!staffNames.containsKey(b.getUserId())) {
-                User u = userDAO.findById(b.getUserId());
-                staffNames.put(b.getUserId(), u != null ? u.getFullName() : "—");
-            }
+            staffNames.computeIfAbsent(b.getUserId(), id -> {
+                User u = userDAO.findById(id);
+                return u != null ? u.getFullName() : "—";
+            });
         }
 
-        // ── 6. Revenue for the last 7 days (for bar chart) ───────────────
-        // Returns rows: day_label, revenue  (most recent day last)
-        long[] chartRevenue = new long[7];
-        String[] chartLabels = new String[7];
+        // ── 6. Last 7 days revenue for bar chart ──────────────────────────
+        long[]   chartRevenue = new long[7];
+        String[] chartLabels  = new String[7];
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM");
+        for (int i = 0; i < 7; i++) chartLabels[i] = today.minusDays(6 - i).format(fmt);
+
+        JdbcUtil.ResultSetHolder h5 = JdbcUtil.executeQuery(
+                "SELECT CAST(created_at AS DATE) AS day, ISNULL(SUM(total),0) AS revenue " +
+                "FROM bills WHERE status<>'cancel' " +
+                "  AND created_at >= CAST(DATEADD(DAY,-6,GETDATE()) AS DATE) " +
+                "GROUP BY CAST(created_at AS DATE) ORDER BY day ASC");
         try {
-            ResultSet rs = JdbcUtil.executeQuery(
-                    "SELECT TOP 7 " +
-                            "  CAST(created_at AS DATE) AS day, " +
-                            "  ISNULL(SUM(total), 0) AS revenue " +
-                            "FROM bills " +
-                            "WHERE status <> 'cancel' " +
-                            "  AND created_at >= CAST(DATEADD(DAY,-6,GETDATE()) AS DATE) " +
-                            "GROUP BY CAST(created_at AS DATE) " +
-                            "ORDER BY day ASC"
-            );
-            // Pre-fill with zeros for missing days
-            java.time.LocalDate today = java.time.LocalDate.now();
-            java.time.format.DateTimeFormatter labelFmt =
-                    java.time.format.DateTimeFormatter.ofPattern("dd/MM");
-            for (int i = 0; i < 7; i++) {
-                chartLabels[i]  = today.minusDays(6 - i).format(labelFmt);
-                chartRevenue[i] = 0;
-            }
+            ResultSet rs = h5 != null ? h5.rs() : null;
             while (rs != null && rs.next()) {
                 java.sql.Date d = rs.getDate("day");
-                java.time.LocalDate ld = d.toLocalDate();
-                long gap = java.time.temporal.ChronoUnit.DAYS.between(today.minusDays(6), ld);
-                if (gap >= 0 && gap < 7) {
-                    chartRevenue[(int) gap] = rs.getLong("revenue");
-                }
+                long gap = java.time.temporal.ChronoUnit.DAYS.between(today.minusDays(6), d.toLocalDate());
+                if (gap >= 0 && gap < 7) chartRevenue[(int) gap] = rs.getLong("revenue");
             }
         } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h5); }
 
-        // ── 7. Put everything in request scope ────────────────────────────
-        request.setAttribute("todayRevenue",      todayRevenue);
-        request.setAttribute("todayBillCount",    todayBillCount);
-        request.setAttribute("yesterdayRevenue",  yesterdayRevenue);
-        request.setAttribute("yesterdayBillCount",yesterdayBillCount);
-        request.setAttribute("pendingCount",      pendingCount);
-        request.setAttribute("activeStaff",       activeStaff);
-        request.setAttribute("totalStaff",        totalStaff);
-        request.setAttribute("recentBills",       recentBills);
-        request.setAttribute("staffNames",        staffNames);
-        request.setAttribute("chartRevenue",      chartRevenue);
-        request.setAttribute("chartLabels",       chartLabels);
+        // ── 7. Bind to request ────────────────────────────────────────────
+        request.setAttribute("todayRevenue",       todayRevenue);
+        request.setAttribute("todayBillCount",     todayBillCount);
+        request.setAttribute("yesterdayRevenue",   yesterdayRevenue);
+        request.setAttribute("yesterdayBillCount", yesterdayBillCount);
+        request.setAttribute("pendingCount",       pendingCount);
+        request.setAttribute("activeStaff",        activeStaff);
+        request.setAttribute("totalStaff",         totalStaff);
+        request.setAttribute("recentBills",        recentBills);
+        request.setAttribute("staffNames",         staffNames);
+        request.setAttribute("chartRevenue",       chartRevenue);
+        request.setAttribute("chartLabels",        chartLabels);
 
         request.getRequestDispatcher("/WEB-INF/views/manager/dashboard/index.jsp")
                 .forward(request, response);

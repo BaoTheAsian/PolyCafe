@@ -117,6 +117,7 @@
     </c:if>
 
     <form method="post" action="${pageContext.request.contextPath}/auth/login">
+      <input type="hidden" name="_csrf" value="${sessionScope._csrf}">
       <div class="form-group">
         <label for="email">Email</label>
         <input type="email" id="email" name="email" value="${email}" required placeholder="admin@polycoffee.com">

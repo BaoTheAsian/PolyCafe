@@ -12,65 +12,61 @@ public class CategoryDAO implements CrudDAO<Category, Integer> {
 
     @Override
     public int create(Category entity) {
-        // Kiểm tra trùng tên
         if (existsByName(entity.getName(), 0)) return -1;
-        String sql = "INSERT INTO categories(name, active) VALUES (?, ?)";
-        return JdbcUtil.executeUpdate(sql, entity.getName(), entity.isActive());
+        return JdbcUtil.executeUpdate(
+                "INSERT INTO categories(name, active) VALUES (?, ?)",
+                entity.getName(), entity.isActive());
     }
 
     @Override
     public int update(Category entity) {
-        // Kiểm tra trùng tên (trừ chính nó)
         if (existsByName(entity.getName(), entity.getId())) return -1;
-        String sql = "UPDATE categories SET name = ?, active = ? WHERE id = ?";
-        return JdbcUtil.executeUpdate(sql, entity.getName(), entity.isActive(), entity.getId());
+        return JdbcUtil.executeUpdate(
+                "UPDATE categories SET name = ?, active = ? WHERE id = ?",
+                entity.getName(), entity.isActive(), entity.getId());
     }
 
     @Override
     public int delete(Integer id) {
-        // JdbcUtil trả về -2 nếu có drinks liên quan (FK constraint)
-        String sql = "DELETE FROM categories WHERE id = ?";
-        return JdbcUtil.executeUpdate(sql, id);
+        return JdbcUtil.executeUpdate("DELETE FROM categories WHERE id = ?", id);
     }
 
-    /** Kiểm tra tên loại đồ uống đã tồn tại chưa (excludeId = 0 khi tạo mới) */
     public boolean existsByName(String name, int excludeId) {
-        String sql = "SELECT COUNT(*) FROM categories WHERE name = ? AND id != ?";
+        JdbcUtil.ResultSetHolder h = JdbcUtil.executeQuery(
+                "SELECT COUNT(*) FROM categories WHERE name = ? AND id != ?", name, excludeId);
         try {
-            ResultSet rs = JdbcUtil.executeQuery(sql, name, excludeId);
-            if (rs != null && rs.next()) return rs.getInt(1) > 0;
+            if (h != null && h.rs().next()) return h.rs().getInt(1) > 0;
         } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h); }
         return false;
     }
 
     @Override
     public List<Category> findAll() {
-        String sql = "SELECT * FROM categories";
-        return findBySql(sql);
+        return findBySql("SELECT * FROM categories");
     }
 
     @Override
     public Category findById(Integer id) {
-        String sql = "SELECT * FROM categories WHERE id = ?";
-        List<Category> list = findBySql(sql, id);
+        List<Category> list = findBySql("SELECT * FROM categories WHERE id = ?", id);
         return list.isEmpty() ? null : list.get(0);
     }
 
     @Override
     public List<Category> findBySql(String sql, Object... values) {
         List<Category> list = new ArrayList<>();
+        JdbcUtil.ResultSetHolder h = JdbcUtil.executeQuery(sql, values);
         try {
-            ResultSet rs = JdbcUtil.executeQuery(sql, values);
+            ResultSet rs = h != null ? h.rs() : null;
             while (rs != null && rs.next()) {
-                Category category = new Category();
-                category.setId(rs.getInt("id"));
-                category.setName(rs.getString("name"));
-                category.setActive(rs.getBoolean("active"));
-                list.add(category);
+                Category c = new Category();
+                c.setId(rs.getInt("id"));
+                c.setName(rs.getString("name"));
+                c.setActive(rs.getBoolean("active"));
+                list.add(c);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h); }
         return list;
     }
 }

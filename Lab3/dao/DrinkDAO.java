@@ -12,9 +12,9 @@ public class DrinkDAO implements CrudDAO<Drink, Integer> {
 
     @Override
     public int create(Drink entity) {
-        if (entity.getPrice() < 0) return -3; // Giá không hợp lệ
-        String sql = "INSERT INTO drinks(category_id, name, price, image, description, active) VALUES (?, ?, ?, ?, ?, ?)";
-        return JdbcUtil.executeUpdate(sql,
+        if (entity.getPrice() < 0) return -3;
+        return JdbcUtil.executeUpdate(
+                "INSERT INTO drinks(category_id, name, price, image, description, active) VALUES (?, ?, ?, ?, ?, ?)",
                 entity.getCategoryId(), entity.getName(), entity.getPrice(),
                 entity.getImage(), entity.getDescription(), entity.isActive());
     }
@@ -22,71 +22,58 @@ public class DrinkDAO implements CrudDAO<Drink, Integer> {
     @Override
     public int update(Drink entity) {
         if (entity.getPrice() < 0) return -3;
-        String sql = "UPDATE drinks SET category_id = ?, name = ?, price = ?, image = ?, description = ?, active = ? WHERE id = ?";
-        return JdbcUtil.executeUpdate(sql,
+        return JdbcUtil.executeUpdate(
+                "UPDATE drinks SET category_id = ?, name = ?, price = ?, image = ?, description = ?, active = ? WHERE id = ?",
                 entity.getCategoryId(), entity.getName(), entity.getPrice(),
                 entity.getImage(), entity.getDescription(), entity.isActive(), entity.getId());
     }
 
     @Override
     public int delete(Integer id) {
-        // JdbcUtil trả về -2 nếu đồ uống đã có trong hóa đơn (FK constraint)
-        String sql = "DELETE FROM drinks WHERE id = ?";
-        return JdbcUtil.executeUpdate(sql, id);
+        return JdbcUtil.executeUpdate("DELETE FROM drinks WHERE id = ?", id);
     }
 
     @Override
     public List<Drink> findAll() {
-        String sql = "SELECT * FROM drinks";
-        return findBySql(sql);
+        return findBySql("SELECT * FROM drinks");
     }
 
     @Override
     public Drink findById(Integer id) {
-        String sql = "SELECT * FROM drinks WHERE id = ?";
-        List<Drink> list = findBySql(sql, id);
+        List<Drink> list = findBySql("SELECT * FROM drinks WHERE id = ?", id);
         return list.isEmpty() ? null : list.get(0);
     }
 
     @Override
     public List<Drink> findBySql(String sql, Object... values) {
         List<Drink> list = new ArrayList<>();
+        JdbcUtil.ResultSetHolder h = JdbcUtil.executeQuery(sql, values);
         try {
-            ResultSet rs = JdbcUtil.executeQuery(sql, values);
+            ResultSet rs = h != null ? h.rs() : null;
             while (rs != null && rs.next()) {
-                Drink drink = new Drink();
-                drink.setId(rs.getInt("id"));
-                drink.setCategoryId(rs.getInt("category_id"));
-                drink.setName(rs.getString("name"));
-                drink.setPrice(rs.getDouble("price"));
-                drink.setImage(rs.getString("image"));
-                drink.setDescription(rs.getString("description"));
-                drink.setActive(rs.getBoolean("active"));
-                list.add(drink);
+                Drink d = new Drink();
+                d.setId(rs.getInt("id"));
+                d.setCategoryId(rs.getInt("category_id"));
+                d.setName(rs.getString("name"));
+                d.setPrice(rs.getDouble("price"));
+                d.setImage(rs.getString("image"));
+                d.setDescription(rs.getString("description"));
+                d.setActive(rs.getBoolean("active"));
+                list.add(d);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h); }
         return list;
     }
-
-    // ==================== Lab 5: Search + Pagination ====================
 
     public List<Drink> search(String keyword, int categoryId, int active, int page, int pageSize) {
         StringBuilder sql = new StringBuilder("SELECT * FROM drinks WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND name LIKE ?");
-            params.add("%" + keyword.trim() + "%");
+            sql.append(" AND name LIKE ?"); params.add("%" + keyword.trim() + "%");
         }
-        if (categoryId > 0) {
-            sql.append(" AND category_id = ?");
-            params.add(categoryId);
-        }
-        if (active >= 0) {
-            sql.append(" AND active = ?");
-            params.add(active);
-        }
+        if (categoryId > 0) { sql.append(" AND category_id = ?"); params.add(categoryId); }
+        if (active >= 0)    { sql.append(" AND active = ?");      params.add(active); }
         sql.append(" ORDER BY id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         params.add((page - 1) * pageSize);
         params.add(pageSize);
@@ -97,21 +84,15 @@ public class DrinkDAO implements CrudDAO<Drink, Integer> {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM drinks WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND name LIKE ?");
-            params.add("%" + keyword.trim() + "%");
+            sql.append(" AND name LIKE ?"); params.add("%" + keyword.trim() + "%");
         }
-        if (categoryId > 0) {
-            sql.append(" AND category_id = ?");
-            params.add(categoryId);
-        }
-        if (active >= 0) {
-            sql.append(" AND active = ?");
-            params.add(active);
-        }
+        if (categoryId > 0) { sql.append(" AND category_id = ?"); params.add(categoryId); }
+        if (active >= 0)    { sql.append(" AND active = ?");      params.add(active); }
+        JdbcUtil.ResultSetHolder h = JdbcUtil.executeQuery(sql.toString(), params.toArray());
         try {
-            ResultSet rs = JdbcUtil.executeQuery(sql.toString(), params.toArray());
-            if (rs != null && rs.next()) return rs.getInt(1);
+            if (h != null && h.rs().next()) return h.rs().getInt(1);
         } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h); }
         return 0;
     }
 }

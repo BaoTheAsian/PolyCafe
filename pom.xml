@@ -1,59 +1,54 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.polycoffee</groupId>
     <artifactId>polycoffee</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
-
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
     <dependencies>
-        <!-- Servlet API (Tomcat 9 = javax) -->
+        <!--  Servlet API (Tomcat 9 = javax)  -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- JSP API -->
+        <!--  JSP API  -->
         <dependency>
             <groupId>javax.servlet.jsp</groupId>
             <artifactId>javax.servlet.jsp-api</artifactId>
             <version>2.3.3</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- JSTL -->
+        <!--  JSTL  -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>jstl</artifactId>
             <version>1.2</version>
         </dependency>
-
-        <!-- SQL Server JDBC Driver -->
+        <!--  SQL Server JDBC Driver  -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>12.4.2.jre11</version>
         </dependency>
-
-        <!-- JavaMail (for EmailUtil) -->
+        <!--  JavaMail (for EmailUtil)  -->
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
             <version>1.6.2</version>
         </dependency>
-
-        <!-- Lombok -->
+        <!--  HikariCP connection pool  -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+        <!--  Lombok  -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -61,13 +56,23 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
     <build>
-        <!-- Primary source directory -->
+        <!--  Primary source directory  -->
         <sourceDirectory>Lab3</sourceDirectory>
-
+        <!--  Include db.properties on the classpath from Lab3/resources  -->
+        <resources>
+            <resource>
+                <directory>Lab3/resources</directory>
+            </resource>
+            <resource>
+                <directory>Lab6/webapp/WEB-INF</directory>
+                <includes>
+                    <include>db.properties</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
-            <!-- Add Lab4, Lab5, Lab6 as additional source directories -->
+            <!--  Add Lab4, Lab5, Lab6 as additional source directories  -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -89,7 +94,6 @@
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
@@ -98,7 +102,6 @@
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

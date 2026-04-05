@@ -5,6 +5,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <title>Top 5 bán chạy — PolyCoffee</title>
   <c:set var="activeNav" value="statistics" scope="request"/>
 </head>

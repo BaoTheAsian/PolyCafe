@@ -4,6 +4,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <title>${category.id > 0 ? 'Sửa' : 'Thêm'} danh mục — PolyCoffee</title>
   <c:set var="activeNav" value="categories" scope="request"/>
 </head>
@@ -26,6 +28,7 @@
     </div>
     <div class="pc-card-bd">
       <form method="post" action="${pageContext.request.contextPath}/manager/categories">
+        <input type="hidden" name="_csrf" value="${sessionScope._csrf}">
         <input type="hidden" name="action" value="${category.id > 0 ? 'update' : 'create'}">
         <c:if test="${category.id > 0}">
           <input type="hidden" name="id" value="${category.id}">

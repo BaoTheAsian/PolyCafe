@@ -22,6 +22,7 @@
     <h4>${category.id > 0 ? 'Sửa' : 'Thêm'} loại đồ uống</h4>
 
     <form method="post" action="${pageContext.request.contextPath}/manager/categories">
+        <input type="hidden" name="_csrf" value="${sessionScope._csrf}">
         <input type="hidden" name="action" value="${category.id > 0 ? 'update' : 'create'}">
         <c:if test="${category.id > 0}">
             <input type="hidden" name="id" value="${category.id}">

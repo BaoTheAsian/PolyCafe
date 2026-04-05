@@ -8,9 +8,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BillDetail {
-    private int id;
-    private int billId;
-    private int drinkId;
-    private int quantity;
+    private int    id;
+    private int    billId;
+    private int    drinkId;
+    private String drinkName;   // populated by JOIN in findByBillId()
+    private int    quantity;
     private double price;
+    private String size;        // S / M / L  (nullable, default M)
+    private String note;        // e.g. "ít đường, nhiều đá"
 }

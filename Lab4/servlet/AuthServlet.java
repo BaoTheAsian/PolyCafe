@@ -3,6 +3,7 @@ package servlet;
 import dao.UserDAO;
 import entity.User;
 import utils.AuthUtil;
+import utils.CsrfUtil;
 import utils.ParamUtil;
 
 import javax.servlet.ServletException;
@@ -25,43 +26,48 @@ public class AuthServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String path = request.getServletPath();
-
-        if (path.equals("/auth/logout")) {
+        if ("/auth/logout".equals(request.getServletPath())) {
             AuthUtil.clear(request);
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
-
-        // Hiển thị trang đăng nhập
+        // Seed CSRF token into session for the login form
+        CsrfUtil.getOrCreateToken(request);
         request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String email = ParamUtil.getString(request, "email", "");
+        // CSRF check (even on login — prevents pre-auth CSRF token fixation)
+        if (!CsrfUtil.isValid(request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid CSRF token");
+            return;
+        }
+
+        String email    = ParamUtil.getString(request, "email",    "");
         String password = ParamUtil.getString(request, "password", "");
 
-        // Tìm user theo email
         User user = userDAO.findByEmail(email);
 
         if (user != null && user.getPassword().equals(password) && user.isActive()) {
-            // Đăng nhập thành công - lưu session
+            // Regenerate session to prevent session fixation
+            request.getSession().invalidate();
+            request.getSession(true);
             AuthUtil.setUser(request, user);
+            CsrfUtil.getOrCreateToken(request); // fresh token for new session
 
-            // Redirect về trang trước đó hoặc trang mặc định
             String redirectUri = (String) request.getSession().getAttribute("redirect_uri");
             if (redirectUri != null) {
                 request.getSession().removeAttribute("redirect_uri");
                 response.sendRedirect(redirectUri);
-            } else if (user.isRole()) {
-                response.sendRedirect(request.getContextPath() + "/manager/categories");
+            } else if (user.isManager()) {
+                response.sendRedirect(request.getContextPath() + "/manager/dashboard");
             } else {
-                response.sendRedirect(request.getContextPath() + "/employee/pos");
+                response.sendRedirect(request.getContextPath() + "/manager/dashboard");
             }
         } else {
-            // Đăng nhập thất bại
+            CsrfUtil.getOrCreateToken(request);
             request.setAttribute("error", "Email hoặc mật khẩu không đúng!");
             request.setAttribute("email", email);
             request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);

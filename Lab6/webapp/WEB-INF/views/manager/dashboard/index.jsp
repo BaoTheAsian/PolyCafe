@@ -214,7 +214,7 @@
   <div class="role-badge">
     <div class="role-dot"></div>
     <c:choose>
-      <c:when test="${sessionScope.user.role}">Quản lý</c:when>
+      <c:when test="${sessionScope.user.role eq 'manager' or sessionScope.user.role eq 'true' or sessionScope.user.role eq '1'}">Quản lý</c:when>
       <c:otherwise>Nhân viên</c:otherwise>
     </c:choose>
   </div>
@@ -255,7 +255,7 @@
     <div class="nav-section">Nhân viên</div>
     <a class="nav-item" href="${pageContext.request.contextPath}/employee/pos">
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="2" width="13" height="9" rx="1"/><path d="M5 11v2M10 11v2M3 13h9"/><path d="M6 6h3M7.5 5v3"/></svg>
-      POS — Bán hàng
+      POS
     </a>
   </nav>
 

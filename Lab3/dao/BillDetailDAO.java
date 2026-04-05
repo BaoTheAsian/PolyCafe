@@ -12,83 +12,93 @@ public class BillDetailDAO implements CrudDAO<BillDetail, Integer> {
 
     @Override
     public int create(BillDetail entity) {
-        String sql = "INSERT INTO bill_details(bill_id, drink_id, quantity, price) VALUES (?, ?, ?, ?)";
-        return JdbcUtil.executeUpdate(sql,
-                entity.getBillId(), entity.getDrinkId(), entity.getQuantity(), entity.getPrice());
+        return JdbcUtil.executeUpdate(
+                "INSERT INTO bill_details(bill_id, drink_id, quantity, price, size, note) VALUES (?, ?, ?, ?, ?, ?)",
+                entity.getBillId(), entity.getDrinkId(), entity.getQuantity(),
+                entity.getPrice(), entity.getSize(), entity.getNote());
     }
 
     @Override
     public int update(BillDetail entity) {
-        String sql = "UPDATE bill_details SET bill_id = ?, drink_id = ?, quantity = ?, price = ? WHERE id = ?";
-        return JdbcUtil.executeUpdate(sql,
-                entity.getBillId(), entity.getDrinkId(), entity.getQuantity(), entity.getPrice(), entity.getId());
+        return JdbcUtil.executeUpdate(
+                "UPDATE bill_details SET bill_id=?, drink_id=?, quantity=?, price=?, size=?, note=? WHERE id=?",
+                entity.getBillId(), entity.getDrinkId(), entity.getQuantity(),
+                entity.getPrice(), entity.getSize(), entity.getNote(), entity.getId());
     }
 
     @Override
     public int delete(Integer id) {
-        String sql = "DELETE FROM bill_details WHERE id = ?";
-        return JdbcUtil.executeUpdate(sql, id);
+        return JdbcUtil.executeUpdate("DELETE FROM bill_details WHERE id = ?", id);
     }
 
     @Override
-    public List<BillDetail> findAll() {
-        String sql = "SELECT * FROM bill_details";
-        return findBySql(sql);
-    }
+    public List<BillDetail> findAll() { return findBySql("SELECT * FROM bill_details"); }
 
     @Override
     public BillDetail findById(Integer id) {
-        String sql = "SELECT * FROM bill_details WHERE id = ?";
-        List<BillDetail> list = findBySql(sql, id);
+        List<BillDetail> list = findBySql("SELECT * FROM bill_details WHERE id = ?", id);
         return list.isEmpty() ? null : list.get(0);
     }
 
     @Override
     public List<BillDetail> findBySql(String sql, Object... values) {
         List<BillDetail> list = new ArrayList<>();
+        JdbcUtil.ResultSetHolder h = JdbcUtil.executeQuery(sql, values);
         try {
-            ResultSet rs = JdbcUtil.executeQuery(sql, values);
+            ResultSet rs = h != null ? h.rs() : null;
             while (rs != null && rs.next()) {
-                BillDetail detail = new BillDetail();
-                detail.setId(rs.getInt("id"));
-                detail.setBillId(rs.getInt("bill_id"));
-                detail.setDrinkId(rs.getInt("drink_id"));
-                detail.setQuantity(rs.getInt("quantity"));
-                detail.setPrice(rs.getDouble("price"));
-                list.add(detail);
+                BillDetail bd = new BillDetail();
+                bd.setId(rs.getInt("id"));
+                bd.setBillId(rs.getInt("bill_id"));
+                bd.setDrinkId(rs.getInt("drink_id"));
+                bd.setDrinkName(rs.getString("drink_name"));
+                bd.setQuantity(rs.getInt("quantity"));
+                bd.setPrice(rs.getDouble("price"));
+                bd.setSize(rs.getString("size"));
+                bd.setNote(rs.getString("note"));
+                list.add(bd);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h); }
         return list;
     }
 
-    // ==================== Lab 6: Business Logic ====================
-
+    /** Fetch bill details joined with drink name — used in POS and bill detail views. */
     public List<BillDetail> findByBillId(int billId) {
-        return findBySql("SELECT * FROM bill_details WHERE bill_id = ?", billId);
+        return findBySql(
+                "SELECT bd.*, d.name AS drink_name " +
+                "FROM bill_details bd " +
+                "INNER JOIN drinks d ON bd.drink_id = d.id " +
+                "WHERE bd.bill_id = ?", billId);
     }
 
-    public void addDrinkToBill(int billId, int drinkId, double price) {
-        BillDetail existing = findByBillAndDrink(billId, drinkId);
+    public void addDrinkToBill(int billId, int drinkId, double price, String size, String note) {
+        BillDetail existing = findByBillDrinkSize(billId, drinkId, size);
         if (existing != null) {
             updateQuantity(existing.getId(), existing.getQuantity() + 1);
         } else {
-            create(new BillDetail(0, billId, drinkId, 1, price));
+            BillDetail bd = new BillDetail();
+            bd.setBillId(billId);
+            bd.setDrinkId(drinkId);
+            bd.setQuantity(1);
+            bd.setPrice(price);
+            bd.setSize(size != null ? size : "M");
+            bd.setNote(note);
+            create(bd);
         }
     }
 
     public void updateQuantity(int detailId, int newQuantity) {
-        if (newQuantity <= 0) {
-            delete(detailId);
-        } else {
-            JdbcUtil.executeUpdate("UPDATE bill_details SET quantity = ? WHERE id = ?", newQuantity, detailId);
-        }
+        if (newQuantity <= 0) delete(detailId);
+        else JdbcUtil.executeUpdate("UPDATE bill_details SET quantity = ? WHERE id = ?", newQuantity, detailId);
     }
 
-    public BillDetail findByBillAndDrink(int billId, int drinkId) {
+    private BillDetail findByBillDrinkSize(int billId, int drinkId, String size) {
         List<BillDetail> list = findBySql(
-                "SELECT * FROM bill_details WHERE bill_id = ? AND drink_id = ?", billId, drinkId);
+                "SELECT bd.*, d.name AS drink_name " +
+                "FROM bill_details bd INNER JOIN drinks d ON bd.drink_id = d.id " +
+                "WHERE bd.bill_id = ? AND bd.drink_id = ? AND ISNULL(bd.size,'M') = ISNULL(?,'M')",
+                billId, drinkId, size != null ? size : "M");
         return list.isEmpty() ? null : list.get(0);
     }
 }

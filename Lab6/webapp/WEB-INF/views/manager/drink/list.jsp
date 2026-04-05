@@ -5,6 +5,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <title>Đồ uống — PolyCoffee</title>
   <c:set var="activeNav" value="drinks" scope="request"/>
 </head>

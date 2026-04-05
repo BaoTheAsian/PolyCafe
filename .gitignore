@@ -1,12 +1,17 @@
-# IDE
-.idea/
-*.iml
-.smarttomcat/
-
 # Build output
 target/
-out/
+*.war
+*.class
 
-# OS
-Thumbs.db
-.DS_Store
+# Database credentials — NEVER commit real values
+db.properties
+**/WEB-INF/db.properties
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.DS_Store
+
+# Uploaded files
+Lab6/webapp/uploads/
