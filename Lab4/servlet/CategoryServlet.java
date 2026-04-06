@@ -119,6 +119,14 @@ public class CategoryServlet extends HttpServlet {
                     .forward(request, response);
             return;
         }
+        if (result <= 0) {
+            errors.put("name", "Lỗi hệ thống, vui lòng thử lại!");
+            request.setAttribute("category", category);
+            request.setAttribute("errors", errors);
+            request.getRequestDispatcher("/WEB-INF/views/manager/category/form.jsp")
+                    .forward(request, response);
+            return;
+        }
         request.getSession().setAttribute("message", "Thêm loại đồ uống thành công!");
         response.sendRedirect(request.getContextPath() + "/manager/categories");
     }
@@ -153,6 +161,14 @@ public class CategoryServlet extends HttpServlet {
                     .forward(request, response);
             return;
         }
+        if (result <= 0) {
+            errors.put("name", "Lỗi hệ thống, vui lòng thử lại!");
+            request.setAttribute("category", category);
+            request.setAttribute("errors", errors);
+            request.getRequestDispatcher("/WEB-INF/views/manager/category/form.jsp")
+                    .forward(request, response);
+            return;
+        }
         request.getSession().setAttribute("message", "Cập nhật loại đồ uống thành công!");
         response.sendRedirect(request.getContextPath() + "/manager/categories");
     }
@@ -160,9 +176,16 @@ public class CategoryServlet extends HttpServlet {
     private void delete(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = ParamUtil.getInt(request, "id", 0);
+        if (id <= 0) {
+            request.getSession().setAttribute("error", "ID không hợp lệ!");
+            response.sendRedirect(request.getContextPath() + "/manager/categories");
+            return;
+        }
         int result = categoryDAO.delete(id);
         if (result == -2) {
             request.getSession().setAttribute("error", "Không thể xóa loại đồ uống vì có đồ uống thuộc loại này!");
+        } else if (result <= 0) {
+            request.getSession().setAttribute("error", "Xóa thất bại, vui lòng thử lại!");
         } else {
             request.getSession().setAttribute("message", "Xóa loại đồ uống thành công!");
         }

@@ -227,30 +227,32 @@
     </a>
 
 
-    <div class="nav-section">Quản lý</div>
-    <a class="nav-item" href="${pageContext.request.contextPath}/manager/categories">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 4h11M4 8h7M6 12h3"/></svg>
-      Danh mục
-    </a>
-    <a class="nav-item" href="${pageContext.request.contextPath}/manager/drinks">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3.5 4h8L10 12H5L3.5 4z"/><path d="M5.5 4V3a2 2 0 014 0v1"/></svg>
-      Đồ uống
-    </a>
-    <a class="nav-item" href="${pageContext.request.contextPath}/manager/staffs">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7.5" cy="5" r="2.5"/><path d="M3 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4"/></svg>
-      Nhân viên
-    </a>
-    <a class="nav-item" href="${pageContext.request.contextPath}/manager/bills">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="3" width="12" height="9" rx="1"/><path d="M5 3V1.5M10 3V1.5M1.5 7h12"/></svg>
-      Hóa đơn
-      <c:if test="${pendingCount > 0}">
-        <span class="nav-badge">${pendingCount}</span>
-      </c:if>
-    </a>
-    <a class="nav-item" href="${pageContext.request.contextPath}/manager/statistics">
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 11l3-4 3 2.5 3-5 3 2"/><path d="M2 2v9h12"/></svg>
-          Thống kê
-    </a>
+    <c:if test="${sessionScope.user.manager}">
+      <div class="nav-section">Quản lý</div>
+      <a class="nav-item" href="${pageContext.request.contextPath}/manager/categories">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 4h11M4 8h7M6 12h3"/></svg>
+        Danh mục
+      </a>
+      <a class="nav-item" href="${pageContext.request.contextPath}/manager/drinks">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3.5 4h8L10 12H5L3.5 4z"/><path d="M5.5 4V3a2 2 0 014 0v1"/></svg>
+        Đồ uống
+      </a>
+      <a class="nav-item" href="${pageContext.request.contextPath}/manager/staffs">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7.5" cy="5" r="2.5"/><path d="M3 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4"/></svg>
+        Nhân viên
+      </a>
+      <a class="nav-item" href="${pageContext.request.contextPath}/manager/bills">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="3" width="12" height="9" rx="1"/><path d="M5 3V1.5M10 3V1.5M1.5 7h12"/></svg>
+        Hóa đơn
+        <c:if test="${pendingCount > 0}">
+          <span class="nav-badge">${pendingCount}</span>
+        </c:if>
+      </a>
+      <a class="nav-item" href="${pageContext.request.contextPath}/manager/statistics">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 11l3-4 3 2.5 3-5 3 2"/><path d="M2 2v9h12"/></svg>
+        Thống kê
+      </a>
+    </c:if>
 
     <div class="nav-section">Nhân viên</div>
     <a class="nav-item" href="${pageContext.request.contextPath}/employee/pos">
@@ -316,6 +318,9 @@
     </div>
     <c:remove var="message" scope="session"/>
   </c:if>
+
+  <%-- Manager-only content: stats, chart, recent bills, quick links --%>
+  <c:if test="${sessionScope.user.manager}">
 
   <%-- Stat Cards --%>
   <div class="stats-grid">
@@ -446,7 +451,252 @@
     </div>
   </div>
 
-  <%-- Quick Links --%>
+  </c:if><%-- end manager-only --%>
+
+  <%-- ═══════════════════════════════════════════════════════════
+       EMPLOYEE DASHBOARD — visible only to non-managers
+       ═══════════════════════════════════════════════════════════ --%>
+  <c:if test="${!sessionScope.user.manager}">
+  <style>
+    /* Employee dashboard styles */
+    .emp-grid      { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px; }
+    .emp-card      { background:#fff; border:1px solid var(--steam); border-radius:14px; padding:18px 20px; position:relative; overflow:hidden; }
+    .emp-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+    .emp-card.bills::before   { background:var(--latte); }
+    .emp-card.done::before    { background:var(--leaf); }
+    .emp-card.revenue::before { background:var(--gold); }
+    .emp-card-label { font-size:11px; color:rgba(44,24,16,.45); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+    .emp-card-value { font-family:'Playfair Display',serif; font-size:28px; font-weight:300; line-height:1; }
+    .emp-card-sub   { font-size:12px; color:rgba(44,24,16,.4); margin-top:7px; }
+    .emp-card-icon  { position:absolute; right:16px; top:50%; transform:translateY(-50%); opacity:.07; }
+
+    .active-order-banner {
+      background:linear-gradient(135deg, var(--espresso), var(--mocha));
+      border-radius:14px; padding:18px 22px; margin-bottom:22px;
+      display:flex; align-items:center; gap:16px;
+    }
+    .aob-icon { width:44px; height:44px; border-radius:12px; background:rgba(200,149,108,.2);
+                display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .aob-label { font-size:11px; color:rgba(255,255,255,.45); text-transform:uppercase; letter-spacing:1px; margin-bottom:3px; }
+    .aob-code  { font-family:'Playfair Display',serif; font-size:17px; color:var(--foam); }
+    .aob-meta  { font-size:12px; color:rgba(255,255,255,.45); margin-top:2px; }
+    .aob-btn   { margin-left:auto; background:var(--latte); color:#fff; border:none; border-radius:9px;
+                 padding:10px 20px; font-size:13px; font-weight:500; cursor:pointer;
+                 font-family:'DM Sans',sans-serif; white-space:nowrap; text-decoration:none;
+                 transition:background .14s; }
+    .aob-btn:hover { background:#d4a07a; }
+    .aob-new   { background:rgba(200,149,108,.15); border:1px dashed rgba(200,149,108,.4);
+                 color:rgba(255,255,255,.55); }
+    .aob-new:hover { background:rgba(200,149,108,.25); color:var(--foam); }
+
+    .emp-section-title { font-family:'Playfair Display',serif; font-size:15px; font-weight:500; margin-bottom:14px; }
+
+    .my-bills-list { background:#fff; border:1px solid var(--steam); border-radius:14px; overflow:hidden; margin-bottom:22px; }
+    .my-bills-hd   { padding:14px 18px; border-bottom:1px solid var(--steam); display:flex; align-items:center; justify-content:space-between; }
+    .my-bill-row   { display:flex; align-items:center; gap:12px; padding:10px 18px; border-bottom:1px solid var(--steam);
+                     text-decoration:none; transition:background .12s; }
+    .my-bill-row:last-child { border-bottom:none; }
+    .my-bill-row:hover { background:var(--foam); }
+    .my-bill-id    { font-size:12px; color:rgba(44,24,16,.35); width:30px; flex-shrink:0; }
+    .my-bill-code  { font-size:13px; font-weight:500; flex:1; }
+    .my-bill-time  { font-size:12px; color:rgba(44,24,16,.4); }
+    .my-bill-total { font-size:13px; font-weight:500; min-width:80px; text-align:right; }
+    .my-bill-empty { padding:28px; text-align:center; font-size:13px; color:rgba(44,24,16,.38); }
+
+    .menu-preview  { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:22px; }
+    .menu-card     { background:#fff; border:1px solid var(--steam); border-radius:12px; overflow:hidden;
+                     text-decoration:none; transition:all .16s; }
+    .menu-card:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(44,24,16,.08); border-color:var(--latte); }
+    .menu-card-img { width:100%; height:90px; object-fit:cover; background:var(--foam);
+                     display:flex; align-items:center; justify-content:center; }
+    .menu-card-body { padding:10px 12px 12px; }
+    .menu-card-name  { font-size:13px; font-weight:500; margin-bottom:3px; }
+    .menu-card-price { font-size:12px; color:var(--latte); font-weight:500; }
+
+    .shift-bar { background:#fff; border:1px solid var(--steam); border-radius:14px;
+                 padding:16px 20px; display:flex; align-items:center; gap:16px; margin-bottom:22px; }
+    .shift-time { font-family:'Playfair Display',serif; font-size:32px; font-weight:300; line-height:1; }
+    .shift-date { font-size:12px; color:rgba(44,24,16,.45); margin-top:4px; }
+    .shift-divider { width:1px; height:40px; background:var(--steam); margin:0 4px; }
+    .shift-stat  { display:flex; flex-direction:column; gap:2px; }
+    .shift-stat-val   { font-size:18px; font-weight:500; font-family:'Playfair Display',serif; }
+    .shift-stat-label { font-size:11px; color:rgba(44,24,16,.4); text-transform:uppercase; letter-spacing:.8px; }
+  </style>
+
+  <%-- Shift bar — clock + date + quick stats --%>
+  <div class="shift-bar">
+    <div>
+      <div class="shift-time" id="empClock">--:--:--</div>
+      <div class="shift-date" id="empDate">--</div>
+    </div>
+    <div class="shift-divider"></div>
+    <div class="shift-stat">
+      <div class="shift-stat-val">${myBillCount}</div>
+      <div class="shift-stat-label">Đơn hôm nay</div>
+    </div>
+    <div class="shift-divider"></div>
+    <div class="shift-stat">
+      <div class="shift-stat-val">${myFinishCount}</div>
+      <div class="shift-stat-label">Đã hoàn thành</div>
+    </div>
+    <div class="shift-divider"></div>
+    <div class="shift-stat">
+      <div class="shift-stat-val">
+        <fmt:formatNumber value="${myRevenue}" type="number" groupingUsed="true" maxFractionDigits="0"/>đ
+      </div>
+      <div class="shift-stat-label">Doanh thu của tôi</div>
+    </div>
+  </div>
+
+  <%-- Stat mini-cards --%>
+  <div class="emp-grid">
+    <div class="emp-card bills">
+      <div class="emp-card-label">Tổng đơn hôm nay</div>
+      <div class="emp-card-value">${myBillCount}</div>
+      <div class="emp-card-sub">Của tôi trong ca này</div>
+      <div class="emp-card-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+      </div>
+    </div>
+    <div class="emp-card done">
+      <div class="emp-card-label">Đơn hoàn thành</div>
+      <div class="emp-card-value">${myFinishCount}</div>
+      <div class="emp-card-sub">
+        <c:choose>
+          <c:when test="${myBillCount > 0}">${myFinishCount} / ${myBillCount} đơn</c:when>
+          <c:otherwise>Chưa có đơn nào</c:otherwise>
+        </c:choose>
+      </div>
+      <div class="emp-card-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+      </div>
+    </div>
+    <div class="emp-card revenue">
+      <div class="emp-card-label">Doanh thu của tôi</div>
+      <div class="emp-card-value" style="font-size:20px;">
+        <fmt:formatNumber value="${myRevenue}" type="number" groupingUsed="true" maxFractionDigits="0"/>đ
+      </div>
+      <div class="emp-card-sub">Từ đơn đã hoàn thành</div>
+      <div class="emp-card-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6M8 10c0 2.2 1.8 4 4 4s4-1.8 4-4"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <%-- Active order banner --%>
+  <c:choose>
+    <c:when test="${myActiveBill != null}">
+      <div class="active-order-banner">
+        <div class="aob-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8956C" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div>
+          <div class="aob-label">Đơn đang mở</div>
+          <div class="aob-code">#${myActiveBill.id} — ${myActiveBill.code}</div>
+          <div class="aob-meta">
+            <fmt:formatNumber value="${myActiveBill.total}" type="number" groupingUsed="true" maxFractionDigits="0"/>đ
+            · Đang chờ thanh toán
+          </div>
+        </div>
+        <a class="aob-btn" href="${pageContext.request.contextPath}/employee/pos">Tiếp tục →</a>
+      </div>
+    </c:when>
+    <c:otherwise>
+      <div class="active-order-banner">
+        <div class="aob-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8956C" stroke-width="1.6"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 18v2M16 18v2M5 18h14"/><path d="M9 9h6M12 7v4"/></svg>
+        </div>
+        <div>
+          <div class="aob-label">Không có đơn đang mở</div>
+          <div class="aob-code" style="color:rgba(255,255,255,.6);">Tạo đơn mới để bắt đầu bán hàng</div>
+        </div>
+        <a class="aob-btn aob-new" href="${pageContext.request.contextPath}/employee/pos">+ Tạo đơn mới</a>
+      </div>
+    </c:otherwise>
+  </c:choose>
+
+  <%-- My bills today --%>
+  <div class="my-bills-list">
+    <div class="my-bills-hd">
+      <div class="emp-section-title" style="margin:0;">Đơn hàng hôm nay của tôi</div>
+      <a href="${pageContext.request.contextPath}/employee/pos" style="font-size:12px;color:var(--latte);text-decoration:none;font-weight:500;">+ Tạo đơn →</a>
+    </div>
+    <c:choose>
+      <c:when test="${not empty myTodayBills}">
+        <c:forEach var="b" items="${myTodayBills}">
+          <div class="my-bill-row">
+            <div class="my-bill-id">#${b.id}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="my-bill-code">${b.code}</div>
+              <div style="font-size:11px;color:rgba(44,24,16,.4);">
+                <fmt:formatDate value="${b.createdAt}" pattern="HH:mm"/>
+              </div>
+            </div>
+            <div class="my-bill-total">
+              <fmt:formatNumber value="${b.total}" type="number" groupingUsed="true" maxFractionDigits="0"/>đ
+            </div>
+            <div class="status-pill ${b.status}" style="margin-left:8px;">
+              <c:choose>
+                <c:when test="${b.status eq 'finish'}">Xong</c:when>
+                <c:when test="${b.status eq 'waiting'}">Chờ</c:when>
+                <c:otherwise>Huỷ</c:otherwise>
+              </c:choose>
+            </div>
+          </div>
+        </c:forEach>
+      </c:when>
+      <c:otherwise>
+        <div class="my-bill-empty">Bạn chưa tạo đơn nào hôm nay</div>
+      </c:otherwise>
+    </c:choose>
+  </div>
+
+  <%-- Menu preview --%>
+  <div class="emp-section-title">Menu hôm nay</div>
+  <div class="menu-preview">
+    <c:forEach var="d" items="${menuDrinks}">
+      <a class="menu-card" href="${pageContext.request.contextPath}/employee/pos">
+        <c:choose>
+          <c:when test="${not empty d.image}">
+            <img class="menu-card-img" src="${pageContext.request.contextPath}/uploads/${d.image}" alt="${d.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="menu-card-img" style="display:none;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(44,24,16,.2)" stroke-width="1.3"><path d="M4.5 5h15L18 18H6L4.5 5z"/><path d="M7.5 5V4a4 4 0 018 0v1"/></svg>
+            </div>
+          </c:when>
+          <c:otherwise>
+            <div class="menu-card-img">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(44,24,16,.2)" stroke-width="1.3"><path d="M4.5 5h15L18 18H6L4.5 5z"/><path d="M7.5 5V4a4 4 0 018 0v1"/></svg>
+            </div>
+          </c:otherwise>
+        </c:choose>
+        <div class="menu-card-body">
+          <div class="menu-card-name">${d.name}</div>
+          <div class="menu-card-price"><fmt:formatNumber value="${d.price}" type="number" groupingUsed="true" maxFractionDigits="0"/>đ</div>
+        </div>
+      </a>
+    </c:forEach>
+  </div>
+
+  <script>
+    // Employee clock — updates every second with date
+    (function() {
+      var days = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
+      function empTick() {
+        var now = new Date();
+        var h = String(now.getHours()).padStart(2,'0');
+        var m = String(now.getMinutes()).padStart(2,'0');
+        var s = String(now.getSeconds()).padStart(2,'0');
+        document.getElementById('empClock').textContent = h + ':' + m + ':' + s;
+        document.getElementById('empDate').textContent =
+          days[now.getDay()] + ', ' +
+          String(now.getDate()).padStart(2,'0') + '/' +
+          String(now.getMonth()+1).padStart(2,'0') + '/' +
+          now.getFullYear();
+      }
+      empTick(); setInterval(empTick, 1000);
+    })();
+  </script>
+  </c:if><%-- end employee-only --%>
   <div class="divider-label">Truy cập nhanh</div>
   <div style="margin-bottom:12px;">
     <a class="pos-cta" href="${pageContext.request.contextPath}/employee/pos">
@@ -461,6 +711,8 @@
     </a>
   </div>
 
+  <%-- Quick links grid — manager only --%>
+  <c:if test="${sessionScope.user.manager}">
   <div class="ql-grid">
     <a class="quick-link ql-green" href="${pageContext.request.contextPath}/manager/categories">
       <div class="ql-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#3D7A5C" stroke-width="1.5"><path d="M3 6h14M5 10h9M7 14h6"/></svg></div>
@@ -493,6 +745,7 @@
       <div class="ql-arrow">→</div>
     </a>
   </div>
+  </c:if><%-- end quick links --%>
 
 </main>
 
@@ -503,12 +756,15 @@
     document.getElementById('clock').textContent =
       String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
   }
-  tick(); setInterval(tick, 30000);
+  tick(); setInterval(tick, 1000);
+</script>
 
+<c:if test="${sessionScope.user.manager}">
+<script>
   // Revenue bar chart (from Java array)
   (function() {
     var container = document.getElementById('revenueChart');
-    if (!container || !chartRevenue) return;
+    if (!container || typeof chartRevenue === 'undefined') return;
     var max = Math.max.apply(null, chartRevenue) || 1;
     container.style.display = 'flex';
     container.style.alignItems = 'flex-end';
@@ -538,6 +794,7 @@
     });
   })();
 </script>
+</c:if>
 
 </body>
 </html>
