@@ -4,8 +4,6 @@ import entity.BestSellingDrink;
 import entity.Revenue;
 import utils.JdbcUtil;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,14 +13,31 @@ public class StatisticDAO {
 
     public List<BestSellingDrink> getTop5BestSellingDrinks(String fromDate, String toDate) {
         List<BestSellingDrink> list = new ArrayList<>();
-        try (Connection conn = JdbcUtil.getConnection();
-             CallableStatement cs = conn.prepareCall("{CALL sp_Top5BestSellingDrinks(?, ?)}")) {
-            cs.setString(1, (fromDate != null && !fromDate.isEmpty()) ? fromDate : null);
-            cs.setString(2, (toDate   != null && !toDate.isEmpty())   ? toDate   : null);
-            if (fromDate == null || fromDate.isEmpty()) cs.setNull(1, java.sql.Types.DATE);
-            if (toDate   == null || toDate.isEmpty())   cs.setNull(2, java.sql.Types.DATE);
-            ResultSet rs = cs.executeQuery();
-            while (rs.next()) {
+
+        StringBuilder sql = new StringBuilder(
+            "SELECT TOP 5 d.id, d.name, d.price, d.image, " +
+            "SUM(bd.quantity) AS totalQuantity, " +
+            "SUM(bd.quantity * bd.price) AS totalRevenue " +
+            "FROM bill_details bd " +
+            "INNER JOIN drinks d ON bd.drink_id = d.id " +
+            "INNER JOIN bills b ON bd.bill_id = b.id " +
+            "WHERE b.status = 'finish'"
+        );
+        List<Object> params = new ArrayList<>();
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append(" AND CAST(b.created_at AS DATE) >= ?");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append(" AND CAST(b.created_at AS DATE) <= ?");
+            params.add(toDate);
+        }
+        sql.append(" GROUP BY d.id, d.name, d.price, d.image ORDER BY totalQuantity DESC");
+
+        JdbcUtil.ResultSetHolder h = JdbcUtil.executeQuery(sql.toString(), params.toArray());
+        try {
+            ResultSet rs = h != null ? h.rs() : null;
+            while (rs != null && rs.next()) {
                 BestSellingDrink item = new BestSellingDrink();
                 item.setId(rs.getInt("id"));
                 item.setName(rs.getString("name"));
@@ -33,19 +48,34 @@ public class StatisticDAO {
                 list.add(item);
             }
         } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h); }
         return list;
     }
 
     public List<Revenue> getRevenueByDay(String fromDate, String toDate) {
         List<Revenue> list = new ArrayList<>();
-        try (Connection conn = JdbcUtil.getConnection();
-             CallableStatement cs = conn.prepareCall("{CALL sp_RevenueByDay(?, ?)}")) {
-            if (fromDate != null && !fromDate.isEmpty()) cs.setString(1, fromDate);
-            else cs.setNull(1, java.sql.Types.DATE);
-            if (toDate != null && !toDate.isEmpty()) cs.setString(2, toDate);
-            else cs.setNull(2, java.sql.Types.DATE);
-            ResultSet rs = cs.executeQuery();
-            while (rs.next()) {
+
+        StringBuilder sql = new StringBuilder(
+            "SELECT CAST(b.created_at AS DATE) AS billDate, " +
+            "COUNT(b.id) AS totalBills, " +
+            "SUM(b.total) AS totalRevenue " +
+            "FROM bills b WHERE b.status = 'finish'"
+        );
+        List<Object> params = new ArrayList<>();
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append(" AND CAST(b.created_at AS DATE) >= ?");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append(" AND CAST(b.created_at AS DATE) <= ?");
+            params.add(toDate);
+        }
+        sql.append(" GROUP BY CAST(b.created_at AS DATE) ORDER BY billDate ASC");
+
+        JdbcUtil.ResultSetHolder h = JdbcUtil.executeQuery(sql.toString(), params.toArray());
+        try {
+            ResultSet rs = h != null ? h.rs() : null;
+            while (rs != null && rs.next()) {
                 Revenue item = new Revenue();
                 item.setBillDate(rs.getDate("billDate"));
                 item.setTotalBills(rs.getInt("totalBills"));
@@ -53,10 +83,10 @@ public class StatisticDAO {
                 list.add(item);
             }
         } catch (SQLException e) { e.printStackTrace(); }
+        finally { JdbcUtil.closeQuietly(h); }
         return list;
     }
 
-    /** Revenue by payment method for a date range. */
     public List<Object[]> getRevenueByPaymentMethod(String fromDate, String toDate) {
         List<Object[]> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(

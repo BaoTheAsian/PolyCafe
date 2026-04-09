@@ -49,6 +49,7 @@ public class DrinkServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String action = ParamUtil.getString(request, "action", "");
         switch (action) {
             case "create": create(request, response); break;

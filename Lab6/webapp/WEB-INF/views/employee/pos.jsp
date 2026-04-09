@@ -100,7 +100,7 @@
     <div class="drinks-panel">
       <div class="drink-grid">
         <c:forEach var="d" items="${drinks}">
-          <div class="drink-card">
+          <div class="drink-card" data-price="${d.price}">
             <c:choose>
               <c:when test="${not empty d.image}">
                 <img class="drink-img" src="${pageContext.request.contextPath}/uploads/${d.image}" alt="${d.name}">
@@ -125,7 +125,7 @@
               <form method="post" action="${pageContext.request.contextPath}/employee/pos/init">
                 <input type="hidden" name="_csrf"   value="${sessionScope._csrf}">
                 <input type="hidden" name="drinkId" value="${d.id}">
-                <input type="hidden" name="price"   value="${d.price}">
+                <input type="hidden" name="price"   value="${d.price}" class="price-val">
                 <input type="hidden" name="size"    class="size-val" value="M">
                 <input type="text"   name="note"    class="pc-input" placeholder="Ghi chú (ít đường…)"
                        style="font-size:12px;padding:5px 9px;margin-bottom:6px;">
@@ -248,12 +248,23 @@
   </div>
 </main>
 <script>
-  // Size selector — scoped to each drink card
+  // Size selector — scoped to each drink card, updates price dynamically
   function selectSize(btn, size) {
     const card = btn.closest('.drink-card');
     card.querySelectorAll('.size-pill').forEach(p => p.classList.remove('selected'));
     btn.classList.add('selected');
     card.querySelector('.size-val').value = size;
+
+    // Adjust price: S = -15%, M = base, L = +20%
+    const basePrice = parseFloat(card.dataset.price);
+    let multiplier = 1.0;
+    if (size === 'S') multiplier = 0.85;
+    if (size === 'L') multiplier = 1.20;
+    const newPrice = Math.round(basePrice * multiplier);
+
+    card.querySelector('.price-val').value = newPrice;
+    card.querySelector('.drink-price').textContent =
+        newPrice.toLocaleString('vi-VN') + 'đ';
   }
 
   // Payment method selector

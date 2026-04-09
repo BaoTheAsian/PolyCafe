@@ -76,6 +76,7 @@ public class PosServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         User user = AuthUtil.getUser(request);
         if (user == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");

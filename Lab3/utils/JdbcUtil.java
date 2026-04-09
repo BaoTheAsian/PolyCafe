@@ -37,7 +37,7 @@ public class JdbcUtil {
         Properties props = loadProperties();
 
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(     get(props, "db.url",      "DB_URL",      "jdbc:sqlserver://localhost:1433;databaseName=PolyCoffee;encrypt=false"));
+        config.setJdbcUrl(     get(props, "db.url",      "DB_URL",      "jdbc:sqlserver://localhost:1433;databaseName=PolyCoffee;encrypt=false;sendStringParametersAsUnicode=true;characterEncoding=UTF-8"));
         config.setUsername(    get(props, "db.username",  "DB_USERNAME", "sa"));
         config.setPassword(    get(props, "db.password",  "DB_PASSWORD", ""));
         config.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -141,7 +141,13 @@ public class JdbcUtil {
 
     private static void bind(PreparedStatement ps, Object[] values) throws SQLException {
         for (int i = 0; i < values.length; i++) {
-            ps.setObject(i + 1, values[i]);
+            if (values[i] instanceof String) {
+                // Use setNString so SQL Server sends the value as NVARCHAR (Unicode),
+                // which is required for Vietnamese and other non-ASCII characters.
+                ps.setNString(i + 1, (String) values[i]);
+            } else {
+                ps.setObject(i + 1, values[i]);
+            }
         }
     }
 

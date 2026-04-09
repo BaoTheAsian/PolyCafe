@@ -24,6 +24,10 @@
     <div class="pc-alert success">${sessionScope.message}</div>
     <c:remove var="message" scope="session"/>
   </c:if>
+  <c:if test="${not empty sessionScope.error}">
+    <div class="pc-alert danger">${sessionScope.error}</div>
+    <c:remove var="error" scope="session"/>
+  </c:if>
 
   <%-- Search / filter bar --%>
   <form method="get" action="${pageContext.request.contextPath}/manager/bills"
